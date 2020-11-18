@@ -18,20 +18,20 @@ mysql = MySQL(app, cursorclass=DictCursor)
 
 @app.route('/')
 def index():
-    return render_template("index.html")
+    return render_template("this_is_just_for_testing.html")
 
 
 @app.route('/search', methods=('GET', 'POST'))
 def search():
     if request.method == 'GET':
-        kw = request.args.get('kw')
-        print(kw)
-        if kw is None:
-            return render_template("index2.html")
+        keyword = request.args.get('keyword')
+
+        if keyword is None:
+            return render_template("index.html")
 
         connection = mysql.get_db()
         cursor = connection.cursor()
-        cursor.execute("SELECT * FROM test.interviews WHERE field = '" + kw + "';")
+        cursor.execute("SELECT * FROM test.interviews WHERE field = '" + keyword + "';")
         connection.commit()
         query_value = cursor.fetchall()
         cursor.close()

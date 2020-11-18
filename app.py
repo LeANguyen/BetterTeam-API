@@ -1,8 +1,8 @@
-from flask import Flask, render_template, request, jsonify
+from django.shortcuts import redirect
+from flask import Flask, render_template, request, jsonify, url_for
 from flaskext.mysql import MySQL
 from pymysql.cursors import DictCursor
-
-import argument_handler as arg_handler
+import json
 
 app = Flask(__name__)
 app.debug = True
@@ -18,7 +18,24 @@ mysql = MySQL(app, cursorclass=DictCursor)
 
 @app.route('/')
 def index():
-    return "<h4>Get interview job questions with url: E.g.. http://127.0.0.1:5000/accountant</h4>"
+    return render_template("index.html")
+
+
+@app.route('/search', methods=('GET', 'POST'))
+def search():
+    if request.method == 'GET':
+        kw = request.args.get('kw')
+        print(kw)
+        if kw is None:
+            return render_template("index2.html")
+
+        connection = mysql.get_db()
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM test.interviews WHERE field = '" + kw + "';")
+        connection.commit()
+        query_value = cursor.fetchall()
+        cursor.close()
+        return jsonify(query_value)
 
 
 @app.route('/all', methods=['GET'])
@@ -32,17 +49,31 @@ def get_questions():
     return jsonify(query_value)
 
 
-@app.route('/<string:field>', methods=['GET', 'POST'])
-def get_question(field):
-    if request.method == "GET":
-        connection = mysql.get_db()
-        cursor = connection.cursor()
-        cursor.execute("SELECT * FROM test.interviews WHERE field = '" + field.title() + "';")
-        connection.commit()
-        query_value = cursor.fetchall()
-        cursor.close()
-        return jsonify(query_value)
-    return render_template('index.html')
+@app.route('/fields', methods=['GET'])
+def get_fields():
+    connection = mysql.get_db()
+    cursor = connection.cursor()
+    cursor.execute("SELECT field FROM test.interviews;")
+    connection.commit()
+    query_value = cursor.fetchall()
+    cursor.close()
+    with open('fields.txt', 'w') as outfile:
+        json.dump(query_value, outfile)
+
+    with open('fields.json', 'w') as json_file:
+        json.dump(query_value, json_file)
+    return jsonify(query_value)
+
+
+# @app.route('/<string:field>', methods=['GET'])
+# def get_question(field):
+#     connection = mysql.get_db()
+#     cursor = connection.cursor()
+#     cursor.execute("SELECT * FROM test.interviews WHERE field = '" + field.title() + "';")
+#     connection.commit()
+#     query_value = cursor.fetchall()
+#     cursor.close()
+#     return jsonify(query_value)
 
 
 if __name__ == '__main__':

@@ -1,8 +1,6 @@
 from flask import Flask, render_template, request, jsonify
-# from flask_mysqldb import MySQL
 from flaskext.mysql import MySQL
 from pymysql.cursors import DictCursor
-import json
 
 import argument_handler as arg_handler
 
@@ -44,7 +42,6 @@ def get_question(field):
         query_value = cursor.fetchall()
         cursor.close()
         return jsonify(query_value)
-        # return 'success'
     return render_template('index.html')
 
 
